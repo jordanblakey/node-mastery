@@ -111,5 +111,10 @@ helpers.sendTwilioSms = function(phone, msg, callback) {
   }
 };
 
+// Test Twilio SMS Sending
+// helpers.sendTwilioSms("4698595332", "Ahoy from Twilio", function(err) {
+//   console.log("this was the error:", err);
+// });
+
 // Export the module
 module.exports = helpers;
