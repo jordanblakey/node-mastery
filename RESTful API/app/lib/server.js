@@ -3,63 +3,66 @@
  */
 
 // Dependencies
-var http = require("http");
-var https = require("https");
-var url = require("url");
-var StringDecoder = require("string_decoder").StringDecoder;
-var config = require("./config");
-var fs = require("fs");
-var handlers = require("./handlers");
-var helpers = require("./helpers");
-var path = require("path");
+var http = require('http')
+var https = require('https')
+var url = require('url')
+var StringDecoder = require('string_decoder').StringDecoder
+var config = require('./config')
+var fs = require('fs')
+var handlers = require('./handlers')
+var helpers = require('./helpers')
+var path = require('path')
+var util = require('util')
+var debug = util.debuglog('server')
 
 // Instantiate the server module object
-var server = {};
+var server = {}
 
 // Instantiating the HTTP server
 server.httpServer = http.createServer(function(req, res) {
-  server.unifiedServer(req, res);
-});
+  server.unifiedServer(req, res)
+})
 
 // Instantiate the HTTPS server
 server.httpsServerOptions = {
-  key: fs.readFileSync(path.join(__dirname, "/../https/key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "/../https/cert.pem"))
-};
+  key: fs.readFileSync(path.join(__dirname, '/../https/key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '/../https/cert.pem'))
+}
 
 server.httpsServer = https.createServer(server.httpsServerOptions, function(req, res) {
-  server.unifiedServer(req, res);
-});
+  server.unifiedServer(req, res)
+})
 
 // All the server logic for port the http and https server
 server.unifiedServer = function(req, res) {
   // Get the URL and parse it
-  var parsedUrl = url.parse(req.url, true);
+  var parsedUrl = url.parse(req.url, true)
 
   // Get the path
-  var path = parsedUrl.pathname;
-  var trimmedPath = path.replace(/^\/+|\/+$/g, "");
+  var path = parsedUrl.pathname
+  var trimmedPath = path.replace(/^\/+|\/+$/g, '')
 
   // Get the query string as and object
-  var queryStringObject = parsedUrl.query;
+  var queryStringObject = parsedUrl.query
 
   // Get the HTTP Method
-  var method = req.method.toLowerCase();
+  var method = req.method.toLowerCase()
 
   // Get the headers as an object
-  var headers = req.headers;
+  var headers = req.headers
 
   // Get the payload, if any
-  var decoder = new StringDecoder("utf-8");
-  var buffer = "";
-  req.on("data", function(data) {
-    buffer += decoder.write(data);
-  });
-  req.on("end", function() {
-    buffer += decoder.end();
+  var decoder = new StringDecoder('utf-8')
+  var buffer = ''
+  req.on('data', function(data) {
+    buffer += decoder.write(data)
+  })
+  req.on('end', function() {
+    buffer += decoder.end()
 
     // Choose the handler this request should go to. If one is not found, go to the notFound handler
-    var chosenHandler = typeof server.router[trimmedPath] !== "undefined" ? server.router[trimmedPath] : handlers.notFound;
+    var chosenHandler =
+      typeof server.router[trimmedPath] !== 'undefined' ? server.router[trimmedPath] : handlers.notFound
 
     // Construct the data object to send to the handler
     var data = {
@@ -68,53 +71,93 @@ server.unifiedServer = function(req, res) {
       method: method,
       headers: headers,
       payload: helpers.parseJsonToObject(buffer)
-    };
+    }
 
-    chosenHandler(data, function(statusCode, payload) {
+    chosenHandler(data, function(statusCode, payload, contentType) {
       // Use the status code called back by the handler or default to 200
-      statusCode = typeof statusCode == "number" ? statusCode : 200;
+      statusCode = typeof statusCode == 'number' ? statusCode : 200
+
       // Use the payload called back by the handler, or default to an empty object
-      payload = typeof payload == "object" ? payload : {};
+      payload = typeof payload == 'object' ? payload : {}
+
+      // Determine the type of response, or fallback to JSON
+      contentType = typeof contentType == 'string' ? contentType : 'json'
 
       // Convert the payload to a string
-      var payloadString = JSON.stringify(payload);
+      var payloadString = JSON.stringify(payload)
 
-      // Return the response
-      res.setHeader("Content-Type", "application/json");
-      res.writeHead(statusCode);
-      res.end(payloadString);
+      // Return the response parts that are content specific
+      var payload = ''
+      if (contentType == 'json') {
+        res.setHeader('Content-Type', 'application/json')
+        payload = typeof payload == 'object' ? payload : {}
+      }
+      if (contentType == 'html') {
+        res.setHeader('Content-Type', 'text/html')
+        payload = typeof payload == 'string' ? payload : ''
+      }
 
-      // Log the request path
-      console.log("Returning this response:", statusCode, payloadString);
-    });
+      // Return the response parts that are commont to all content-types
+      res.writeHead(statusCode)
+      res.end(payloadString)
+
+      // If the response is 200, print green, otherwise print red
+      if (statusCode == 200) {
+        debug('\x1b[32m%s\x1b[0m', method.toUpperCase() + ' /' + trimmedPath + ' ' + statusCode)
+      } else {
+        debug('\x1b[31m%s\x1b[0m', method.toUpperCase() + ' /' + trimmedPath + ' ' + statusCode)
+      }
+    })
 
     // Log the request path
-    console.log("Request received on path: " + trimmedPath + " with method " + method + " and with these query string parameters:", queryStringObject);
-    // console.log('Headers for the request:', headers);
-    console.log("Payload for the request:", buffer);
-  });
-};
+    debug(
+      'Request received on path: ' +
+        trimmedPath +
+        ' with method ' +
+        method +
+        ' and with these query string parameters:',
+      queryStringObject
+    )
+    // debug('Headers for the request:', headers);
+    debug('Payload for the request:', buffer)
+  })
+}
 
 // Define a request router
 server.router = {
+  '': handlers.index,
+  'account/create': handlers.accountCreate,
+  'account/edit': handlers.accountEdit,
+  'account/deleted': handlers.accountDeleted,
+  'session/create': handlers.sessionCreate,
+  'session/deleted': handlers.sessionDeleted,
+  'checks/all': handlers.checksList,
+  'checks/create': handlers.checksCreate,
+  'checks/edit': handlers.checksEdit,
   ping: handlers.ping,
   users: handlers.users,
   tokens: handlers.tokens,
   checks: handlers.checks
-};
+}
 
 // Init script
 server.init = function() {
   // Start the http server
   server.httpServer.listen(config.httpPort, function() {
-    console.log("The server is listening on port " + config.httpPort + " in " + config.envName + " mode...");
-  });
+    console.log(
+      '\x1b[36m%s\x1b[0m',
+      'The server is listening on port ' + config.httpPort + ' in ' + config.envName + ' mode...'
+    )
+  })
 
   // Start the HTTPS server
   server.httpsServer.listen(config.httpsPort, function() {
-    console.log("The server is listening on port " + config.httpsPort + " in " + config.envName + " mode...");
-  });
-};
+    console.log(
+      '\x1b[35m%s\x1b[0m',
+      'The server is listening on port ' + config.httpsPort + ' in ' + config.envName + ' mode...'
+    )
+  })
+}
 
 // Export the module
-module.exports = server;
+module.exports = server
