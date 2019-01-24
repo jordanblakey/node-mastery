@@ -17,21 +17,23 @@
   <body class="{body.class}">
     <!-- Page Wrapper -->
     <div class="wrapper">
+      <!-- Header -->
+      <div class="header">
+        <!-- Logo -->
+        <a href="/" class="logo"> <img src="public/logo.png" alt="Logo" /> </a>
+        <!-- Navigation -->
+        <ul class="menu">
+          <li><a href="/">Home</a></li>
+          <li class="logged-out"><a href="/account/create">Signup</a></li>
+          <li class="logged-out"><a href="/account/create">Login</a></li>
+          <li class="logged-in"><a href="/checks/all">Dashboard</a></li>
+          <li class="logged-in"><a href="/account/edit">Account Settings</a></li>
+          <li class="logged-in"><a href="#">Logout</a></li>
+        </ul>
+      </div>
 
-    <!-- Header -->
-    <div class="header">
-      <!-- Logo -->
-      <a href="/" class="logo"></a>
-      <!-- Navigation -->
-      <ul class="menu">
-        <li><a href="/">Home</a></li>
-        <li class="logged-out"><a href="/">Signup</a></li>
-        <li class="logged-out"><a href="/">Login</a></li>
-        <li class="logged-in"><a href="/">Dashboard</a></li>
-        <li class="logged-in"><a href="/">Account Settings</a></li>
-        <li class="logged-in"><a href="/">Logout</a></li>
-      </ul>
+      <!-- Page-specific Content -->
+      <div class="content"></div>
     </div>
-
-    <!-- Page-specific Content -->
-    <div class="content">
+  </body>
+</html>
