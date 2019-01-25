@@ -180,14 +180,14 @@ button.cta:visited {
   padding: 0 0 20px 0;
 }
 
-.formWrapper {
+.form-wrapper {
   margin: 0 auto;
   max-width: 500px;
   padding: 15px;
 }
 
-.formError {
-  display: nonee;
+.form-error {
+  display: none;
   background-color: #c83737;
   font-style: italic;
   color: #fff;
@@ -200,7 +200,7 @@ button.cta:visited {
   border-style: solid;
 }
 
-.formSuccess {
+.form-success {
   display: none;
   background-color: #217844;
   font-style: italic;
@@ -227,7 +227,7 @@ option {
   width: 100%;
 }
 
-.checkboxGroup input {
+.checkbox-group input {
   display: inline-block;
   width: initial;
   margin: 20px;
@@ -237,16 +237,16 @@ input.disabled {
   background-color: #efefef;
 }
 
-.inputWrapper {
+.input-wrapper {
   padding: 0 0 20px 0;
 }
 
-.inputLabel {
+.input-label {
   padding: 0 0 5px 0;
   color: #808080;
 }
 
-.backButton {
+.back-button {
   text-transform: uppercase;
   font-weight: bold;
   display: inline-block;
@@ -284,18 +284,18 @@ td {
 
 /* Page specific styles for dashboard */
 
-#noChecksMessage td {
+#no-checks-message td {
   text-align: center;
   font-style: italic;
   font-size: 20px;
   padding: 20px;
 }
 
-#noChecksMessage {
+#no-checks-message {
   display: none;
 }
 
-#createCheckCTA {
+#create-check-cta {
   margin-top: 40px;
   display: none;
 }
