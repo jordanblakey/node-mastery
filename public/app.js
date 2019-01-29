@@ -1,8 +1,9 @@
 /*
- * Frontend Logic for the Application
+ * Frontend Logic for application
+ *
  */
 
-//  Container for the frontend application
+// Container for frontend application
 var app = {}
 
 // Config
@@ -10,16 +11,16 @@ app.config = {
     sessionToken: false
 }
 
-// AJAX Client (for the restful API)
+// AJAX Client (for RESTful API)
 app.client = {}
 
 // Interface for making API calls
 app.client.request = function(headers, path, method, queryStringObject, payload, callback) {
     // Set defaults
     headers = typeof headers == 'object' && headers !== null ? headers : {}
-    path = typeof path == 'string' && path !== null ? path : '/'
+    path = typeof path == 'string' ? path : '/'
     method =
-        typeof method == 'string' && ['GET', 'POST', 'PUT', 'DELETE'].indexOf(method) > -1
+        typeof method == 'string' && ['POST', 'GET', 'PUT', 'DELETE'].indexOf(method.toUpperCase()) > -1
             ? method.toUpperCase()
             : 'GET'
     queryStringObject = typeof queryStringObject == 'object' && queryStringObject !== null ? queryStringObject : {}
@@ -32,19 +33,19 @@ app.client.request = function(headers, path, method, queryStringObject, payload,
     for (var queryKey in queryStringObject) {
         if (queryStringObject.hasOwnProperty(queryKey)) {
             counter++
-            // If at least one query string parameter has been added, prepend new ones with an ampersand instead of a ?
+            // If at least one query string parameter has already been added, preprend new ones with an ampersand
             if (counter > 1) {
                 requestUrl += '&'
             }
-            //  Add the key and value
+            // Add the key and value
             requestUrl += queryKey + '=' + queryStringObject[queryKey]
         }
     }
 
-    //  Form the http request as a JSON type
+    // Form the http request as a JSON type
     var xhr = new XMLHttpRequest()
     xhr.open(method, requestUrl, true)
-    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.setRequestHeader('Content-type', 'application/json')
 
     // For each header sent, add it to the request
     for (var headerKey in headers) {
@@ -69,7 +70,7 @@ app.client.request = function(headers, path, method, queryStringObject, payload,
                 try {
                     var parsedResponse = JSON.parse(responseReturned)
                     callback(statusCode, parsedResponse)
-                } catch (err) {
+                } catch (e) {
                     callback(statusCode, false)
                 }
             }
@@ -92,7 +93,7 @@ app.bindForms = function() {
             var method = this.method.toUpperCase()
 
             // Hide the error message (if it's currently shown due to a previous error)
-            document.querySelector('#' + formId + ' .form-error').style.display = 'hidden'
+            document.querySelector('#' + formId + ' .formError').style.display = 'hidden'
 
             // Turn the inputs into a payload
             var payload = {}
@@ -131,7 +132,7 @@ app.bindForms = function() {
 // Form response processor
 app.formResponseProcessor = function(formId, requestPayload, responsePayload) {
     var functionToCall = false
-    //  If account creation was successful, try to immediately log the user in
+    // If account creation was successful, try to immediately log the user in
     if (formId == 'accountCreate') {
         // Take the phone and password, and use it to log the user in
         var newPayload = {
@@ -143,14 +144,14 @@ app.formResponseProcessor = function(formId, requestPayload, responsePayload) {
             newStatusCode,
             newResponsePayload
         ) {
-            // display an error on the form if needed
+            // Display an error on the form if needed
             if (newStatusCode !== 200) {
                 // Set the formError field with the error text
-                document.querySelector('#' + formId + ' .form-error').innerHTML =
+                document.querySelector('#' + formId + ' .formError').innerHTML =
                     'Sorry, an error has occured. Please try again.'
 
                 // Show (unhide) the form error field on the form
-                document.querySelector('#' + formId + ' .form-error').style.display = 'block'
+                document.querySelector('#' + formId + ' .formError').style.display = 'block'
             } else {
                 // If successful, set the token and redirect the user
                 app.setSessionToken(newResponsePayload)
@@ -165,7 +166,7 @@ app.formResponseProcessor = function(formId, requestPayload, responsePayload) {
     }
 }
 
-//  Get the session token fro localstorage and set it in the app.config object
+// Get the session token from localstorage and set it in the app.config object
 app.getSessionToken = function() {
     var tokenString = localStorage.getItem('token')
     if (typeof tokenString == 'string') {
@@ -173,6 +174,8 @@ app.getSessionToken = function() {
             var token = JSON.parse(tokenString)
             app.config.sessionToken = token
             if (typeof token == 'object') {
+                app.setLoggedInClass(true)
+            } else {
                 app.setLoggedInClass(false)
             }
         } catch (e) {
@@ -253,19 +256,19 @@ app.tokenRenewalLoop = function() {
     }, 1000 * 60)
 }
 
-//  Init (bootstrapping)
+// Init (bootstrapping)
 app.init = function() {
     // Bind all form submissions
     app.bindForms()
 
-    //  Get the token from localstorage
+    // Get the token from localstorage
     app.getSessionToken()
 
     // Renew token
     app.tokenRenewalLoop()
 }
 
-//  Call the init processes after the window loads
+// Call the init processes after the window loads
 window.onload = function() {
     app.init()
 }
