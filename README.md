@@ -14,3 +14,13 @@ Create an SSL cert and key using OpenSSL:
 ```sh
 env NODE_DEBUG=server node index.js
 ```
+
+### Debugging
+
+```sh
+node inspect index-debug.js # Run file in node, stopping on debugger statements.
+debug> # debugger prompt
+cont # Step through debug statements
+repl # Drop into REPL within debugger
+ctrl+C; # return to debugger
+```
